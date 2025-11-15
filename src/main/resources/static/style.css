@@ -1,0 +1,41 @@
+/* Дополнительные стили */
+.alert-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid #0d6efd;
+}
+
+.alert-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.status-NEW { 
+    border-left-color: #dc3545; 
+}
+
+.status-IN_PROGRESS { 
+    border-left-color: #ffc107; 
+}
+
+.status-RESOLVED { 
+    border-left-color: #198754; 
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-group-vertical .btn {
+    margin-bottom: 0.25rem;
+}
