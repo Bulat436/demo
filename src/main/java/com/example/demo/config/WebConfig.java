@@ -9,7 +9,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // Перенаправление с корневого URL на index.html
         registry.addViewController("/").setViewName("forward:/index.html");
         registry.addViewController("/alerts").setViewName("forward:/index.html");
         registry.addViewController("/alerts/**").setViewName("forward:/index.html");

@@ -18,8 +18,7 @@ public class CorsConfig {
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
-                
-                // Для статических ресурсов
+
                 registry.addMapping("/**")
                         .allowedOrigins("http://localhost:8080", "http://127.0.0.1:8080")
                         .allowedMethods("GET", "OPTIONS")
