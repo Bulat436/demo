@@ -20,6 +20,7 @@ public class UserMapper {
     public static User userDtoToUser(UserDto dto) {
         User user = new User();
         user.setUsername(dto.username());
+        user.setPassword(dto.password());
         return user;
     }
     

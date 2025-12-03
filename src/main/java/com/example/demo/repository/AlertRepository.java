@@ -3,11 +3,12 @@ package com.example.demo.repository;
 import com.example.demo.model.Alert;
 import com.example.demo.model.StatusType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AlertRepository extends JpaRepository<Alert, Long> {
+public interface AlertRepository extends JpaRepository<Alert, Long>, JpaSpecificationExecutor<Alert> {
 
     List<Alert> findByStatus(StatusType status);
     

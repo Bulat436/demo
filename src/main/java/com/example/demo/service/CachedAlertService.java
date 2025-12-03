@@ -4,9 +4,11 @@ import com.example.demo.exception.AlertNotFoundException;
 import com.example.demo.model.Alert;
 import com.example.demo.model.StatusType;
 import com.example.demo.repository.AlertRepository;
+import com.example.demo.specification.AlertSpecification;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -110,14 +112,18 @@ public class CachedAlertService implements AlertService {
     public List<Alert> findByBusId(Long busId) {
         return alertRepository.findByBusId(busId);
     }
-
+    
     @Transactional(readOnly = true)
     @Cacheable(value = "alertsByUser", key = "#userId")
     public List<Alert> findByAssignedToUserId(Long userId) {
         return alertRepository.findByAssignedToUserId(userId);
     }
 
-    // Метод для принудительного сброса кеша
+     @Transactional(readOnly = true)
+    public List<Alert> findByFilters(StatusType status, Long busId, String location) {
+        Specification<Alert> spec = AlertSpecification.filter(status, busId, location);
+        return alertRepository.findAll(spec);
+    }
     @Caching(evict = {
         @CacheEvict(value = "alerts", allEntries = true),
         @CacheEvict(value = "alertsByStatus", allEntries = true),

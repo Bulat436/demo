@@ -17,8 +17,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.authentication.BadCredentialsException;
+
+
 
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -37,14 +42,16 @@ public class AuthServiceImpl implements AuthService {
                     loginRequest.password()
                 )
             );
-            
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            
+                        
             User user = (User) authentication.getPrincipal();
-            String role = user.getRole().getAuthority();
-            
+
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", user.getRole().getAuthority());
+            claims.put("username", user.getUsername());
+
             var accessTokenObj = jwtTokenProvider.generateAccessToken(
-                null, 15, ChronoUnit.MINUTES, user
+                claims, 15, ChronoUnit.MINUTES, user
+
             );
             var refreshTokenObj = jwtTokenProvider.generateRefreshToken(
                 7, ChronoUnit.DAYS, user
@@ -63,12 +70,18 @@ public class AuthServiceImpl implements AuthService {
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .build();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+
             
             return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(new LoginResponse(true, role));
-                
+                .body(new LoginResponse(true, user.getRole().getAuthority()));
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.badRequest()
+                .body(new LoginResponse(false, ""));        
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new LoginResponse(false, ""));
@@ -77,28 +90,38 @@ public class AuthServiceImpl implements AuthService {
     
     @Override
     public ResponseEntity<LoginResponse> refresh(String refreshToken) {
-        if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
+        try {
+            if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
+                return ResponseEntity.badRequest().body(new LoginResponse(false, ""));
+            }
+            
+            String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
+            User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Создаем claims для нового access token
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", user.getRole().getAuthority());
+            claims.put("username", user.getUsername());
+            
+            var newAccessToken = jwtTokenProvider.generateAccessToken(
+                claims, 15, ChronoUnit.MINUTES, user
+            );
+            
+            ResponseCookie accessCookie = ResponseCookie.from("access_token", newAccessToken.getTokenValue())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(15 * 60)
+                .build();
+                
+            return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .body(new LoginResponse(true, user.getRole().getAuthority()));
+                
+        }catch (Exception e) {
             return ResponseEntity.badRequest().body(new LoginResponse(false, ""));
         }
-        
-        String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        
-        var newAccessToken = jwtTokenProvider.generateAccessToken(
-            null, 15, ChronoUnit.MINUTES, user
-        );
-        
-        ResponseCookie accessCookie = ResponseCookie.from("access_token", newAccessToken.getTokenValue())
-            .httpOnly(true)
-            .secure(false)
-            .path("/")
-            .maxAge(15 * 60)
-            .build();
-            
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-            .body(new LoginResponse(true, user.getRole().getAuthority()));
     }
     
     @Override

@@ -3,33 +3,43 @@ package com.example.demo.specification;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.example.demo.model.Alert;
+import com.example.demo.model.StatusType;
+
+
 
 public class AlertSpecification {
-    private static Specification<Alert> titleLike(String title){
-        return  (root, query, criteriaBuilder) -> {
-            if(title==null || title.trim().isEmpty()){
-                return null;
-            }
-            return criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), "%"+title.toLowerCase().trim() + "%");
-        };
-    }
-    private static Specification<Alert> priceBetween(Integer min, Integer max) {
+    public static Specification<Alert> hasStatus(StatusType status) {
         return (root, query, criteriaBuilder) -> {
-            if (min == null && max == null) {
+            if (status == null) {
                 return null;
-            } else if (min != null && max != null) {
-                return criteriaBuilder.between(root.get("cost"), min, max);
-            } else if (min != null) {
-                return criteriaBuilder.greaterThanOrEqualTo(root.get("cost"), min);
-            } else {
-                return criteriaBuilder.lessThanOrEqualTo(root.get("cost"), max);
             }
+            return criteriaBuilder.equal(root.get("status"), status);
+        };
+    }
+    public static Specification<Alert> hasBusId(Long busId) {
+
+        return (root, query, criteriaBuilder) -> {
+            if (busId == null) {
+                return null;
+            }
+        return criteriaBuilder.equal(root.get("busId"), busId);
         };
     }
 
-    public static Specification<Alert> filter(String title, Integer min, Integer max){
-        return Specification.allOf(titleLike(title), priceBetween(min, max));
+     public static Specification<Alert> locationContains(String location) {
+        return (root, query, criteriaBuilder) -> {
+            if (location == null || location.trim().isEmpty()) {
+                return null;
+            }
+            return criteriaBuilder.like(
+                criteriaBuilder.lower(root.get("location")), 
+                "%" + location.toLowerCase().trim() + "%"
+            );
+        };
     }
-
-    
+    public static Specification<Alert> filter(StatusType status, Long busId, String location) {
+        return Specification.where(hasStatus(status))
+                           .and(hasBusId(busId))
+                           .and(locationContains(location));
+    }
 }

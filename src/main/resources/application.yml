@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:PostgreSQL://localhost:5432/postgres
+    url: jdbc:postgresql://localhost:5432/postgres
     username: postgres                 
     password: tulub2005
     driver-class-name: org.postgresql.Driver
@@ -16,20 +16,9 @@ spring:
     
   cache:
     type: simple
-    caffeine:
-      spec: maximumSize=500,expireAfterWrite=300s
-  
-management:
-  endpoints:
-    web:
-      exposure:
-        include: cache,metrics
-  endpoint:
-    cache:
-      enabled: true
-
+    
 jwt:
-  secret: "mySecretKey123456789012345678901234567890"
+  secret: "bXlTZWNyZXRLZXkxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTA="
   access-cookie-name: "access_token"
   refresh-cookie-name: "refresh_token"
 
@@ -37,5 +26,5 @@ jwt:
 logging:
   level:
     org.hibernate.SQL: DEBUG
-    org.springframework.cache: TRACE
-    com.example.demo.service: DEBUG
+    com.example.demo: INFO
+    org.springframework.security: INFO

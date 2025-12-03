@@ -5,9 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import com.example.demo.enums.Role;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -29,13 +28,13 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
     
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
     
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(role);
+        return Collections.singletonList(new SimpleGrantedAuthority(role.getAuthority()));
     }
     
     @Override

@@ -9,28 +9,27 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
 public interface AlertService {
-    @Cacheable(value = "alert", key = "#root.methodName")
+    @Cacheable(value = "alerts", unless = "#result.isEmpty()")
     List<Alert> findAll();
     
-    @Cacheable(value = "alert", key = "#status")
+    @Cacheable(value = "alertsByStatus", key = "#status.name()")
     List<Alert> findByStatus(StatusType status);
     
-    @Cacheable(value = "alert", key = "#id")
     Optional<Alert> findById(Long id);
     
     @Transactional
-    @CacheEvict(value = {"alerts"}, allEntries = true)
+    @CacheEvict(value = {"alerts", "alertsByStatus", "alertsByBus", "alertsByUser"}, allEntries = true)
     Alert create(Alert alert);
     
     @Transactional
-    @CacheEvict(value = {"alerts", "alert"}, allEntries = true)
+    @CacheEvict(value = {"alerts", "alertsByStatus", "alertsByBus", "alertsByUser"}, allEntries = true)
     Alert updateStatus(Long alertId, StatusType newStatus);
     
     @Transactional
-    @CacheEvict(value = {"alerts", "alert"}, allEntries = true)
+    @CacheEvict(value = {"alerts", "alertsByStatus", "alertsByBus", "alertsByUser"}, allEntries = true)
     Alert assignToUser(Long alertId, Long userId);
     
     @Transactional
-    @CacheEvict(value = {"alerts", "alert"}, allEntries = true)
+    @CacheEvict(value = {"alerts", "alertsByStatus", "alertsByBus", "alertsByUser"}, allEntries = true)
     void deleteById(Long id);
 }
