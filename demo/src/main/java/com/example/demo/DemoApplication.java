@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,9 +20,12 @@ import java.util.Optional;
 
 @SpringBootApplication
 public class DemoApplication {
+    private static final Logger log = LoggerFactory.getLogger(DemoApplication.class);
 
     public static void main(String[] args) {
+        log.info("Запуск приложения DemoApplication");
         SpringApplication.run(DemoApplication.class, args);
+        log.info("Приложение DemoApplication успешно запущено");
     }
 
     @Bean
@@ -29,9 +34,8 @@ public class DemoApplication {
                               RoleRepository roleRepository,
                               PasswordEncoder passwordEncoder) {
         return args -> {
-            System.out.println("=== INITIALIZING APPLICATION DATA ===");
+            log.info("=== СОЗДАНИЕ ТЕСТОВЫХ ДАННЫХ ===");
             
-            // Сначала убеждаемся, что роли существуют
             List<String> roleNames = Arrays.asList("ADMIN", "MANAGER", "USER");
             
             for (String roleName : roleNames) {
@@ -40,18 +44,17 @@ public class DemoApplication {
                     Role newRole = new Role();
                     newRole.setName(roleName);
                     roleRepository.save(newRole);
-                    System.out.println("Created role: " + roleName);
+                    log.info("Created role: " + roleName);
                 } else {
-                    System.out.println("Role already exists: " + roleName);
+                    log.info("Role already exists: " + roleName);
                 }
             }
             
-            // Теперь создаем пользователей
             createUserIfNotExists("admin", "ADMIN", userRepository, roleRepository, passwordEncoder);
             createUserIfNotExists("manager", "MANAGER", userRepository, roleRepository, passwordEncoder);
             createUserIfNotExists("user", "USER", userRepository, roleRepository, passwordEncoder);
             
-            System.out.println("=== DATA INITIALIZATION FINISHED ===");
+            log.info("=== DATA INITIALIZATION FINISHED ===");
         };
     }
     
@@ -62,14 +65,14 @@ public class DemoApplication {
         
         // Проверяем, существует ли пользователь
         if (userRepository.findByUsername(username).isPresent()) {
-            System.out.println("User already exists: " + username);
+            log.info("User already exists: " + username);
             return;
         }
         
         // Получаем роль (она должна существовать после инициализации выше)
         Optional<Role> roleOptional = roleRepository.findByName(roleName);
         if (roleOptional.isEmpty()) {
-            System.out.println("ERROR: Role not found: " + roleName);
+            log.info("ERROR: Role not found: " + roleName);
             return;
         }
         
@@ -80,6 +83,6 @@ public class DemoApplication {
         user.setRole(roleOptional.get());
         
         userRepository.save(user);
-        System.out.println("Created user: " + username + " with role: " + roleName);
+        log.info("Created user: " + username + " with role: " + roleName);
     }
 }
