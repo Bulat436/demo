@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.enums.StatusType;
 import com.example.demo.model.Alert;
-import com.example.demo.model.StatusType;
 import com.example.demo.service.CachedAlertService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

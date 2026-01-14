@@ -1,8 +1,8 @@
 package com.example.demo.service;
 
+import com.example.demo.enums.StatusType;
 import com.example.demo.exception.AlertNotFoundException;
 import com.example.demo.model.Alert;
-import com.example.demo.model.StatusType;
 import com.example.demo.repository.AlertRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;

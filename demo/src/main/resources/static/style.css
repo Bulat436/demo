@@ -1,7 +1,7 @@
 /* Дополнительные стили */
 .alert-card {
     transition: all 0.3s ease;
-    border-left: 4px solid #0d6efd;
+    border-left: 4px solid #749bd6;
 }
 
 .alert-card:hover {
