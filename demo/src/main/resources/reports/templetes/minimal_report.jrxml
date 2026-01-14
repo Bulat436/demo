@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="MinimalAlertsReport" pageWidth="595" pageHeight="842">
+
+    <!-- Параметры -->
+    <parameter name="REPORT_TITLE" class="java.lang.String"/>
+    <parameter name="GENERATION_DATE" class="java.lang.String"/>
+    <parameter name="TOTAL_ALERTS" class="java.lang.Integer"/>
+    
+    <!-- Поля -->
+    <field name="id" class="java.lang.Long"/>
+    <field name="busId" class="java.lang.Long"/>
+    <field name="type" class="java.lang.String"/>
+    <field name="timestamp" class="java.time.LocalDateTime"/>
+    <field name="location" class="java.lang.String"/>
+    <field name="status" class="java.lang.String"/>
+    
+    <!-- Заголовок -->
+    <title>
+        <band height="70">
+            <staticText>
+                <reportElement x="0" y="10" width="595" height="30"/>
+                <textElement textAlignment="Center">
+                    <font size="18" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Отчёт по инцидентам]]></text>
+            </staticText>
+            
+            <textField>
+                <reportElement x="0" y="40" width="595" height="20"/>
+                <textElement textAlignment="Center">
+                    <font size="12"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{REPORT_TITLE}]]></textFieldExpression>
+            </textField>
+            
+            <textField>
+                <reportElement x="0" y="60" width="595" height="10"/>
+                <textElement textAlignment="Center">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Всего инцидентов: " + $P{TOTAL_ALERTS} + " | Сгенерирован: " + $P{GENERATION_DATE}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+    
+    <!-- Данные -->
+    <detail>
+        <band height="25">
+            <textField>
+                <reportElement x="10" y="0" width="40" height="20"/>
+                <textElement>
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{id}]]></textFieldExpression>
+            </textField>
+            
+            <textField>
+                <reportElement x="60" y="0" width="60" height="20"/>
+                <textElement>
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{busId}]]></textFieldExpression>
+            </textField>
+            
+            <textField>
+                <reportElement x="130" y="0" width="100" height="20"/>
+                <textElement>
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{type}]]></textFieldExpression>
+            </textField>
+            
+            <textField>
+                <reportElement x="240" y="0" width="150" height="20"/>
+                <textElement>
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression>
+                    <![CDATA[$F{timestamp}.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"))]]>
+                </textFieldExpression>
+            </textField>
+            
+            <textField>
+                <reportElement x="400" y="0" width="100" height="20"/>
+                <textElement>
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+    
+    <!-- Подвал -->
+    <pageFooter>
+        <band height="30">
+            <textField evaluationTime="Page">
+                <reportElement x="0" y="10" width="595" height="20"/>
+                <textElement textAlignment="Center">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Страница " + $V{PAGE_NUMBER} + " из " + $V{PAGE_COUNT}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+    
+</jasperReport>

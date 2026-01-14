@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="DefaultAlertsReport" pageWidth="595" pageHeight="842">
+
+    <!-- Параметры -->
+    <parameter name="REPORT_TITLE" class="java.lang.String"/>
+    <parameter name="GENERATION_DATE" class="java.lang.String"/>
+    <parameter name="PERIOD_START" class="java.lang.String"/>
+    <parameter name="PERIOD_END" class="java.lang.String"/>
+    <parameter name="TOTAL_ALERTS" class="java.lang.Integer"/>
+    <parameter name="NEW_COUNT" class="java.lang.Integer"/>
+    <parameter name="IN_PROGRESS_COUNT" class="java.lang.Integer"/>
+    <parameter name="RESOLVED_COUNT" class="java.lang.Integer"/>
+    
+    <!-- Поля -->
+    <field name="id" class="java.lang.Long"/>
+    <field name="busId" class="java.lang.Long"/>
+    <field name="type" class="java.lang.String"/>
+    <field name="timestamp" class="java.time.LocalDateTime"/>
+    <field name="location" class="java.lang.String"/>
+    <field name="status" class="java.lang.String"/>
+    <field name="description" class="java.lang.String"/>
+    
+    <!-- Заголовок -->
+    <title>
+        <band height="100">
+            <!-- Заголовок отчёта -->
+            <staticText>
+                <reportElement x="0" y="10" width="595" height="25"/>
+                <textElement textAlignment="Center">
+                    <font size="20" isBold="true"/>
+                </textElement>
+                <text><![CDATA[$P{REPORT_TITLE}]]></text>
+            </staticText>
+            
+            <!-- Период -->
+            <textField>
+                <reportElement x="0" y="40" width="595" height="15"/>
+                <textElement textAlignment="Center">
+                    <font size="11"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Период: " + $P{PERIOD_START} + " - " + $P{PERIOD_END}]]></textFieldExpression>
+            </textField>
+            
+            <!-- Статистика -->
+            <textField>
+                <reportElement x="0" y="60" width="595" height="15"/>
+                <textElement textAlignment="Center">
+                    <font size="11"/>
+                </textElement>
+                <textFieldExpression>
+                    <![CDATA["Всего: " + $P{TOTAL_ALERTS} + 
+                    " | Новые: " + $P{NEW_COUNT} + 
+                    " | В работе: " + $P{IN_PROGRESS_COUNT} + 
+                    " | Решено: " + $P{RESOLVED_COUNT}]]>
+                </textFieldExpression>
+            </textField>
+            
+            <!-- Дата генерации -->
+            <textField>
+                <reportElement x="0" y="80" width="595" height="15"/>
+                <textElement textAlignment="Center">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Сгенерирован: " + $P{GENERATION_DATE}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+    
+    <!-- Заголовки столбцов -->
+    <columnHeader>
+        <band height="25">
+            <staticText>
+                <reportElement x="10" y="5" width="40" height="20" backcolor="#E6E6E6"/>
+                <textElement>
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[ID]]></text>
+            </staticText>
+            
+            <staticText>
+                <reportElement x="60" y="5" width="60" height="20" backcolor="#E6E6E6"/>
+                <textElement>
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Автобус]]></text>
+            </staticText>
+            
+            <staticText>
+                <reportElement x="130" y="5" width="100" height="20" backcolor="#E6E6E6"/>
+                <textElement>
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Тип]]></text>
+            </staticText>
+            
+            <staticText>
+                <reportElement x="240" y="5" width="150" height="20" backcolor="#E6E6E6"/>
+                <textElement>
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Дата/Время]]></text>
+            </staticText>
+            
+            <staticText>
+                <reportElement x="400" y="5" width="80" height="20" backcolor="#E6E6E6"/>
+                <textElement>
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Статус]]></text>
+            </staticText>
+            
+            <staticText>
+                <reportElement x="490" y="5" width="95" height="20" backcolor="#E6E6E6"/>
+                <textElement>
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Местоположение]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+    
+    <!-- Данные -->
+    <detail>
+        <band height="20">
+            <!-- ID -->
+            <textField>
+                <reportElement x="10" y="0" width="40" height="15"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{id}]]></textFieldExpression>
+            </textField>
+            
+            <!-- Автобус -->
+            <textField>
+                <reportElement x="60" y="0" width="60" height="15"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{busId}]]></textFieldExpression>
+            </textField>
+            
+            <!-- Тип -->
+            <textField>
+                <reportElement x="130" y="0" width="100" height="15"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{type}]]></textFieldExpression>
+            </textField>
+            
+            <!-- Дата/Время -->
+            <textField>
+                <reportElement x="240" y="0" width="150" height="15"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression>
+                    <![CDATA[$F{timestamp}.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"))]]>
+                </textFieldExpression>
+            </textField>
+            
+            <!-- Статус -->
+            <textField>
+                <reportElement x="400" y="0" width="80" height="15"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
+            </textField>
+            
+            <!-- Местоположение -->
+            <textField>
+                <reportElement x="490" y="0" width="95" height="15"/>
+                <textElement>
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{location}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+    
+    <!-- Подвал -->
+    <pageFooter>
+        <band height="30">
+            <textField evaluationTime="Page">
+                <reportElement x="0" y="10" width="595" height="20"/>
+                <textElement textAlignment="Center">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Страница " + $V{PAGE_NUMBER} + " из " + $V{PAGE_COUNT}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+    
+</jasperReport>
