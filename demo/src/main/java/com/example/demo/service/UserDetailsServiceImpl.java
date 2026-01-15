@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,6 +19,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     
     private final UserRepository userRepository;
 
+    @Cacheable(value = "userDetails", key = "#username")
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("Загрузка деталей пользователя по имени: {}", username);
@@ -29,8 +31,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 }
         );
         
-        log.debug("Детали пользователя успешно загружены: {}, authorities: {}", 
-                 username, userDetails.getAuthorities());
+        log.debug("Детали пользователя успешно загружены: {}", username);
         
         return userDetails;
     }

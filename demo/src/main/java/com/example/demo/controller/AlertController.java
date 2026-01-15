@@ -59,6 +59,45 @@ public class AlertController {
         }
     }
 
+    @GetMapping("/bus/{busId}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'MANAGER')")
+    public List<Alert> getAlertsByBus(@PathVariable Long busId) {
+        return alertService.findByBusId(busId); // Метод есть в CachedAlertService
+    }
+
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'MANAGER')")
+    public List<Alert> getAlertsByUser(@PathVariable Long userId) {
+        return alertService.findByAssignedToUserId(userId);
+    }
+
+    @GetMapping("/cache-test")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<String> cacheTest() {
+        log.info("=== БЫСТРЫЙ ТЕСТ КЭША ===");
+        
+        StringBuilder result = new StringBuilder();
+        
+        // Тест 1
+        result.append("Тест 1 (findAll): ");
+        long start1 = System.currentTimeMillis();
+        alertService.findAll();
+        long time1 = System.currentTimeMillis() - start1;
+        result.append(time1).append("ms\n");
+        
+        // Тест 2 - должен быть быстрее
+        result.append("Тест 2 (findAll from cache): ");
+        long start2 = System.currentTimeMillis();
+        alertService.findAll();
+        long time2 = System.currentTimeMillis() - start2;
+        result.append(time2).append("ms\n");
+        
+        // Тест 3 - UserDetails кэш
+        result.append("Тест 3 (UserDetails cache): \n");
+        log.info("Результаты теста кэша:\n{}", result);
+        
+        return ResponseEntity.ok(result.toString());
+    }
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<?> createAlert(@Valid @RequestBody Alert alert, BindingResult result) {

@@ -6,6 +6,7 @@ import com.example.demo.model.Alert;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -15,4 +16,5 @@ public interface AlertRepository extends JpaRepository<Alert, Long>, JpaSpecific
     
     List<Alert> findByBusId(Long busId);
     List<Alert> findByAssignedToUserId(Long userId);
+    List<Alert> findByTimestampBetween(LocalDateTime startDate, LocalDateTime endDate);
 }

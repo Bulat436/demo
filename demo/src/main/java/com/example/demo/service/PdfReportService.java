@@ -28,11 +28,7 @@ public class PdfReportService {
         log.info("Генерация ежедневного отчёта за период: {} - {}", startDate, endDate);
         
         try {
-            List<Alert> alerts = alertRepository.findAll();
-            List<Alert> filteredAlerts = alerts.stream()
-                    .filter(alert -> !alert.getTimestamp().isBefore(startDate) 
-                            && !alert.getTimestamp().isAfter(endDate))
-                    .collect(Collectors.toList());
+            List<Alert> filteredAlerts = alertRepository.findByTimestampBetween(startDate, endDate);
 
             long totalAlerts = filteredAlerts.size();
             long newCount = countByStatus(filteredAlerts, StatusType.NEW);
@@ -65,11 +61,7 @@ public class PdfReportService {
         log.info("Генерация еженедельного отчёта за период: {} - {}", startDate, endDate);
         
         try {
-            List<Alert> alerts = alertRepository.findAll();
-            List<Alert> filteredAlerts = alerts.stream()
-                    .filter(alert -> !alert.getTimestamp().isBefore(startDate) 
-                            && !alert.getTimestamp().isAfter(endDate))
-                    .collect(Collectors.toList());
+            List<Alert> filteredAlerts = alertRepository.findByTimestampBetween(startDate, endDate);
    
             long totalAlerts = filteredAlerts.size();
             long newCount = countByStatus(filteredAlerts, StatusType.NEW);
@@ -102,11 +94,7 @@ public class PdfReportService {
         log.info("Генерация ежемесячного отчёта за период: {} - {}", startDate, endDate);
         
         try {
-            List<Alert> alerts = alertRepository.findAll();
-            List<Alert> filteredAlerts = alerts.stream()
-                    .filter(alert -> !alert.getTimestamp().isBefore(startDate) 
-                            && !alert.getTimestamp().isAfter(endDate))
-                    .collect(Collectors.toList());
+            List<Alert> filteredAlerts = alertRepository.findByTimestampBetween(startDate, endDate);
             
             long totalAlerts = filteredAlerts.size();
             long newCount = countByStatus(filteredAlerts, StatusType.NEW);
@@ -174,11 +162,7 @@ public class PdfReportService {
     }
     
     public Map<String, Object> getReportStatistics(LocalDateTime startDate, LocalDateTime endDate) {
-        List<Alert> allAlerts = alertRepository.findAll();
-        List<Alert> filteredAlerts = allAlerts.stream()
-                .filter(alert -> !alert.getTimestamp().isBefore(startDate) 
-                        && !alert.getTimestamp().isAfter(endDate))
-                .collect(Collectors.toList());
+        List<Alert> filteredAlerts = alertRepository.findByTimestampBetween(startDate, endDate);
         
         long newCount = countByStatus(filteredAlerts, StatusType.NEW);
         long inProgressCount = countByStatus(filteredAlerts, StatusType.IN_PROGRESS);
@@ -234,11 +218,7 @@ public class PdfReportService {
             LocalDateTime endDate = request.getEndDate() != null ? 
                     request.getEndDate() : LocalDateTime.now();
             
-            List<Alert> alerts = alertRepository.findAll();
-            List<Alert> filteredAlerts = alerts.stream()
-                    .filter(alert -> !alert.getTimestamp().isBefore(startDate) 
-                            && !alert.getTimestamp().isAfter(endDate))
-                    .collect(Collectors.toList());
+            List<Alert> filteredAlerts = alertRepository.findByTimestampBetween(startDate, endDate);
             
             // Статистика
             long totalAlerts = filteredAlerts.size();

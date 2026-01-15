@@ -39,4 +39,11 @@ logging:
 
 upload:
   path: uploads
+
+telegram:
+  bot:
+    enabled: true
+    token: 8538615695:AAHbVcrJ7nx9LxBNmD2-V9RmmllG20B_vfE
+    chat-id: 5024026116
+    bot-username: bus_alert_system_bot
   

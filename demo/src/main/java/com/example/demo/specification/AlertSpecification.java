@@ -38,8 +38,10 @@ public class AlertSpecification {
         };
     }
     public static Specification<Alert> filter(StatusType status, Long busId, String location) {
-        return Specification.where(hasStatus(status))
-                           .and(hasBusId(busId))
-                           .and(locationContains(location));
+        return Specification.allOf(
+            hasStatus(status),
+            hasBusId(busId),
+            locationContains(location)
+        );
     }
 }
