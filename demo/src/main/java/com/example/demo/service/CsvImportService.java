@@ -17,8 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.dto.CsvImportResult;
 import com.example.demo.model.Alert;
-import com.example.demo.enums.EventType;
-import com.example.demo.enums.StatusType;
+import com.example.demo.model.EventType;
+import com.example.demo.model.StatusType;
 
 import lombok.RequiredArgsConstructor;
 

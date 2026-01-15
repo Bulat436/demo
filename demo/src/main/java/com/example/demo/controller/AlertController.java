@@ -1,15 +1,15 @@
 package com.example.demo.controller;
 
-import com.example.demo.enums.StatusType;
 import com.example.demo.model.Alert;
+import com.example.demo.model.StatusType;
 import com.example.demo.service.CachedAlertService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -21,6 +21,7 @@ import java.util.Optional;
 @RequestMapping("/api/alerts")
 public class AlertController {
     private static final Logger log = LoggerFactory.getLogger(AlertController.class);
+
     private final CachedAlertService alertService;
 
     public AlertController(CachedAlertService alertService) {
@@ -34,12 +35,13 @@ public class AlertController {
         
         List<Alert> alerts;
         if (status != null) {
-             alerts = alertService.findByStatus(status);
+            alerts = alertService.findByStatus(status);
             log.info("Получено {} инцидентов со статусом: {}", alerts.size(), status);
         } else {
             alerts = alertService.findAll();
-
+            log.info("Получено {} инцидентов", alerts.size());
         }
+        
         return alerts;
     }
 
@@ -98,20 +100,21 @@ public class AlertController {
         
         return ResponseEntity.ok(result.toString());
     }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<?> createAlert(@Valid @RequestBody Alert alert, BindingResult result) {
         log.debug("Создание нового инцидента для автобуса: {}, тип: {}", alert.getBusId(), alert.getType());
+        
         if (result.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
             result.getFieldErrors().forEach(error -> 
                 errors.put(error.getField(), error.getDefaultMessage()));
-
-            log.warn("Создание инцидента не удалось - ошибки валидации: {}", errors);
             
+            log.warn("Создание инцидента не удалось - ошибки валидации: {}", errors);
             return ResponseEntity.badRequest().body(errors);
         }
-
+        
         try {
             Alert createdAlert = alertService.create(alert);
             log.info("Инцидент успешно создан: id={}, автобус={}, тип={}", 
@@ -129,8 +132,8 @@ public class AlertController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Alert> updateStatus(@PathVariable Long id, 
                                              @RequestParam StatusType status) {
-
-        log.debug("Обновление статуса инцидента: id={}, новый статус={}", id, status);                                        
+        log.debug("Обновление статуса инцидента: id={}, новый статус={}", id, status);
+        
         try {
             Alert updatedAlert = alertService.updateStatus(id, status);
             log.info("Статус инцидента обновлен: id={}, старый статус={}, новый статус={}", 
@@ -146,8 +149,8 @@ public class AlertController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Alert> assignAlert(@PathVariable Long id, 
                                             @RequestParam Long userId) {
-
-        log.debug("Назначение инцидента: инцидентId={}, пользовательId={}", id, userId);                                        
+        log.debug("Назначение инцидента: инцидентId={}, пользовательId={}", id, userId);
+        
         try {
             Alert updatedAlert = alertService.assignToUser(id, userId);
             log.info("Инцидент назначен: инцидентId={}, пользовательId={}", id, userId);
@@ -163,6 +166,7 @@ public class AlertController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteAlert(@PathVariable Long id) {
         log.debug("Удаление инцидента: id={}", id);
+        
         try {
             alertService.deleteById(id);
             log.info("Инцидент удален: id={}", id);

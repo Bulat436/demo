@@ -62,7 +62,7 @@ public class CsvImportController {
             }
             
             return ResponseEntity.ok(result);
-
+            
         } catch (Exception e) {
             log.error("Ошибка импорта CSV: {}", e.getMessage(), e);
             CsvImportResult errorResult = new CsvImportResult();

@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
-import com.example.demo.enums.StatusType;
 import com.example.demo.model.Alert;
+import com.example.demo.model.StatusType;
 
 import jakarta.transaction.Transactional;
 import java.util.List;

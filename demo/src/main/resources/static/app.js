@@ -3,6 +3,7 @@ const API_BASE_URL = 'http://localhost:8080/api/alerts';
 // Загрузка всех инцидентов
 async function loadAlerts() {
     showLoading(true);
+    const startTime = performance.now();
     
     try {
         const statusFilter = document.getElementById('statusFilter').value;
@@ -15,12 +16,46 @@ async function loadAlerts() {
         if (!response.ok) throw new Error('Ошибка загрузки данных');
         
         const alerts = await response.json();
+        const loadTime = performance.now() - startTime;
+        
         displayAlerts(alerts);
+        updateStatistics(alerts);
+        
+        // Показываем индикатор кеша если загрузка была быстрой
+        if (loadTime < 100) {
+            showCacheIndicator();
+        }
+        
+        document.getElementById('lastUpdate').textContent = 
+            `Последнее обновление: ${new Date().toLocaleTimeString('ru-RU')}`;
+            
     } catch (error) {
         console.error('Error:', error);
         showError('Ошибка при загрузке инцидентов');
     } finally {
         showLoading(false);
+    }
+}
+
+// Обновление статистики
+function updateStatistics(alerts) {
+    const statNew = alerts.filter(a => a.status === 'NEW').length;
+    const statProgress = alerts.filter(a => a.status === 'IN_PROGRESS').length;
+    const statResolved = alerts.filter(a => a.status === 'RESOLVED').length;
+    const statTotal = alerts.length;
+    
+    document.getElementById('statNew').textContent = statNew;
+    document.getElementById('statProgress').textContent = statProgress;
+    document.getElementById('statResolved').textContent = statResolved;
+    document.getElementById('statTotal').textContent = statTotal;
+    document.getElementById('alertsCount').textContent = statTotal;
+    
+    // Показать/скрыть сообщение о пустом списке
+    const noAlerts = document.getElementById('noAlerts');
+    if (alerts.length === 0) {
+        noAlerts.style.display = 'block';
+    } else {
+        noAlerts.style.display = 'none';
     }
 }
 
@@ -52,6 +87,14 @@ function displayAlerts(alerts) {
                             <strong>Местоположение:</strong> ${alert.location}
                         </p>
                         <p class="card-text">${alert.description}</p>
+                        ${alert.filePath ? `
+                            <p class="card-text">
+                                <strong>Прикрепленный файл:</strong> 
+                                <span class="badge bg-info">
+                                    <i class="fas fa-paperclip"></i> ${alert.filePath.split('/').pop()}
+                                </span>
+                            </p>
+                        ` : ''}
                         <p class="card-text">
                             <small class="text-muted">
                                 <i class="fas fa-clock"></i> ${formatDateTime(alert.timestamp)}
@@ -73,6 +116,9 @@ function displayAlerts(alerts) {
                             ` : ''}
                             <button class="btn btn-info btn-sm mb-1" onclick="openAssignModal(${alert.id})">
                                 <i class="fas fa-user-plus"></i> Назначить
+                            </button>
+                            <button class="btn btn-secondary btn-sm mb-1" onclick="openUploadModal(${alert.id})">
+                                <i class="fas fa-upload"></i> Загрузить файл
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="deleteAlert(${alert.id})">
                                 <i class="fas fa-trash"></i> Удалить
@@ -193,6 +239,99 @@ async function deleteAlert(alertId) {
     }
 }
 
+// Загрузка файла
+async function uploadFile(alertId, file) {
+    if (!file) {
+        showError('Выберите файл для загрузки');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/${alertId}/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showSuccess(result.message);
+            loadAlerts();
+        } else {
+            showError(result.message || 'Ошибка загрузки файла');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Ошибка при загрузке файла');
+    }
+}
+
+// Открытие модального окна загрузки файла
+function openUploadModal(alertId) {
+    document.getElementById('uploadAlertId').value = alertId;
+    document.getElementById('fileInput').value = '';
+    new bootstrap.Modal(document.getElementById('uploadModal')).show();
+}
+
+// Обработка загрузки файла
+async function handleFileUpload() {
+    const alertId = document.getElementById('uploadAlertId').value;
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        showError('Выберите файл для загрузки');
+        return;
+    }
+
+    // Проверка размера файла (макс. 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showError('Файл слишком большой. Максимальный размер: 5MB');
+        return;
+    }
+
+    // Показываем индикатор загрузки
+    const uploadBtn = document.querySelector('#uploadModal .btn-primary');
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+    uploadBtn.disabled = true;
+
+    await uploadFile(alertId, file);
+
+    // Восстанавливаем кнопку
+    uploadBtn.innerHTML = originalText;
+    uploadBtn.disabled = false;
+    
+    // Закрываем модальное окно
+    const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+    if (modal) {
+        modal.hide();
+    }
+}
+
+// Функция для очистки кеша
+async function clearCache() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/cache/clear`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            showSuccess('Кеш успешно очищен!');
+            // Перезагружаем данные после очистки кеша
+            loadAlerts();
+        } else {
+            throw new Error('Ошибка очистки кеша');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Ошибка при очистке кеша');
+    }
+}
+
 // Вспомогательные функции
 function getStatusText(status) {
     const statusMap = {
@@ -228,7 +367,7 @@ function formatDateTime(timestamp) {
 }
 
 function showLoading(show) {
-    document.getElementById('loading').style.display = show ? 'block' : 'none';
+    document.getElementById('loading').style.display = show ? 'flex' : 'none';
 }
 
 function showSuccess(message) {
@@ -240,16 +379,23 @@ function showError(message) {
 }
 
 function showNotification(message, type) {
+    const oldNotifications = document.querySelectorAll('.alert.position-fixed');
+    oldNotifications.forEach(n => n.remove());
+    
     const notification = document.createElement('div');
     notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px; max-width: 400px;';
     notification.innerHTML = `
-        ${message}
+        <div class="d-flex align-items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'danger' ? 'fa-exclamation-circle' : 'fa-info-circle'} me-2"></i>
+            <span>${message}</span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
     document.body.appendChild(notification);
     
+    // Автоматическое скрытие через 5 секунд
     setTimeout(() => {
         if (notification.parentNode) {
             notification.remove();
@@ -257,48 +403,15 @@ function showNotification(message, type) {
     }, 5000);
 }
 
-// Загрузка инцидентов при старте
-document.addEventListener('DOMContentLoaded', function() {
-    loadAlerts();
-});
-
-// Добавляем новые функции для работы с кешем
-
-// Функция для очистки кеша
-async function clearCache() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/cache/clear`, {
-            method: 'POST'
-        });
-
-        if (response.ok) {
-            showSuccess('Кеш успешно очищен!');
-            // Перезагружаем данные после очистки кеша
-            loadAlerts();
-        } else {
-            throw new Error('Ошибка очистки кеша');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Ошибка при очистке кеша');
-    }
-}
-
-// Добавляем кнопку очистки кеша в HTML
-// Обновляем раздел с фильтрами в index.html:
-document.querySelector('.col-md-6.text-end').innerHTML += `
-    <button class="btn btn-outline-warning ms-2" onclick="clearCache()" title="Очистить кеш">
-        <i class="fas fa-broom"></i> Очистить кеш
-    </button>
-`;
-
-// Добавляем индикатор кеширования
 function showCacheIndicator() {
     const indicator = document.createElement('div');
     indicator.className = 'alert alert-info alert-dismissible fade show position-fixed';
-    indicator.style.cssText = 'bottom: 20px; right: 20px; z-index: 1050; min-width: 250px;';
+    indicator.style.cssText = 'bottom: 20px; right: 20px; z-index: 1050; min-width: 250px; max-width: 350px;';
     indicator.innerHTML = `
-        <i class="fas fa-bolt"></i> Данные загружены из кеша
+        <div class="d-flex align-items-center">
+            <i class="fas fa-bolt me-2"></i>
+            <span>Данные загружены из кеша</span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
@@ -311,173 +424,22 @@ function showCacheIndicator() {
     }, 2000);
 }
 
-// Модифицируем функцию loadAlerts для отслеживания времени загрузки
-async function loadAlerts() {
-    showLoading(true);
-    const startTime = performance.now();
+// Обновление времени в заголовке
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('ru-RU');
+    const currentTimeElement = document.getElementById('currentTime');
+    if (currentTimeElement) {
+        currentTimeElement.textContent = timeString;
+    }
+}
+
+// Загрузка инцидентов при старте
+document.addEventListener('DOMContentLoaded', function() {
+    // Обновляем время каждую секунду
+    setInterval(updateTime, 1000);
+    updateTime();
     
-    try {
-        const statusFilter = document.getElementById('statusFilter').value;
-        let url = API_BASE_URL;
-        if (statusFilter) {
-            url += `?status=${statusFilter}`;
-        }
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Ошибка загрузки данных');
-        
-        const alerts = await response.json();
-        const loadTime = performance.now() - startTime;
-        
-        displayAlerts(alerts);
-        
-        // Показываем индикатор кеша если загрузка была быстрой
-        if (loadTime < 100) {
-            showCacheIndicator();
-        }
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Ошибка при загрузке инцидентов');
-    } finally {
-        showLoading(false);
-    }
-    
-}
-// Добавляем функции для работы с файлами
-async function uploadFile(alertId, file) {
-    if (!file) {
-        showError('Выберите файл для загрузки');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        const response = await fetch(`/api/alerts/${alertId}/upload`, {
-            method: 'POST',
-            body: formData
-        });
-
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            showSuccess(result.message);
-            loadAlerts(); // Перезагружаем список
-        } else {
-            showError(result.message || 'Ошибка загрузки файла');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Ошибка при загрузке файла');
-    }
-}
-
-// Добавляем функцию для открытия модального окна загрузки файла
-function openUploadModal(alertId) {
-    document.getElementById('uploadAlertId').value = alertId;
-    document.getElementById('fileInput').value = '';
-    new bootstrap.Modal(document.getElementById('uploadModal')).show();
-}
-
-// Добавляем функцию для обработки загрузки файла
-async function handleFileUpload() {
-    const alertId = document.getElementById('uploadAlertId').value;
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];
-
-    if (!file) {
-        showError('Выберите файл для загрузки');
-        return;
-    }
-
-    // Показываем индикатор загрузки
-    const uploadBtn = document.querySelector('#uploadModal .btn-primary');
-    const originalText = uploadBtn.innerHTML;
-    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
-    uploadBtn.disabled = true;
-
-    await uploadFile(alertId, file);
-
-    // Восстанавливаем кнопку
-    uploadBtn.innerHTML = originalText;
-    uploadBtn.disabled = false;
-    
-    // Закрываем модальное окно
-    bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
-}
-
-// Обновляем функцию displayAlerts для отображения файлов
-function displayAlerts(alerts) {
-    const container = document.getElementById('alertsTable');
-    
-    if (alerts.length === 0) {
-        container.innerHTML = `
-            <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle"></i> Инциденты не найдены
-            </div>
-        `;
-        return;
-    }
-
-    const alertsHtml = alerts.map(alert => `
-        <div class="card mb-3 alert-card status-${alert.status}">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h5 class="card-title">
-                            <span class="badge bg-${getStatusBadgeColor(alert.status)}">${getStatusText(alert.status)}</span>
-                            Инцидент #${alert.id}
-                        </h5>
-                        <p class="card-text">
-                            <strong>Автобус:</strong> ${alert.busId} | 
-                            <strong>Тип:</strong> ${getTypeText(alert.type)} |
-                            <strong>Местоположение:</strong> ${alert.location}
-                        </p>
-                        <p class="card-text">${alert.description}</p>
-                        ${alert.filePath ? `
-                            <p class="card-text">
-                                <strong>Прикрепленный файл:</strong> 
-                                <span class="badge bg-info">
-                                    <i class="fas fa-paperclip"></i> ${alert.filePath}
-                                </span>
-                            </p>
-                        ` : ''}
-                        <p class="card-text">
-                            <small class="text-muted">
-                                <i class="fas fa-clock"></i> ${formatDateTime(alert.timestamp)}
-                                ${alert.assignedToUserId ? `| <i class="fas fa-user"></i> Назначен на: ${alert.assignedToUserId}` : ''}
-                            </small>
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="btn-group-vertical">
-                            ${alert.status !== 'IN_PROGRESS' ? `
-                                <button class="btn btn-warning btn-sm mb-1" onclick="updateStatus(${alert.id}, 'IN_PROGRESS')">
-                                    <i class="fas fa-play"></i> В работу
-                                </button>
-                            ` : ''}
-                            ${alert.status !== 'RESOLVED' ? `
-                                <button class="btn btn-success btn-sm mb-1" onclick="updateStatus(${alert.id}, 'RESOLVED')">
-                                    <i class="fas fa-check"></i> Решен
-                                </button>
-                            ` : ''}
-                            <button class="btn btn-info btn-sm mb-1" onclick="openAssignModal(${alert.id})">
-                                <i class="fas fa-user-plus"></i> Назначить
-                            </button>
-                            <button class="btn btn-secondary btn-sm mb-1" onclick="openUploadModal(${alert.id})">
-                                <i class="fas fa-upload"></i> Загрузить файл
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteAlert(${alert.id})">
-                                <i class="fas fa-trash"></i> Удалить
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-
-    container.innerHTML = alertsHtml;
-}
+    // Загружаем инциденты
+    loadAlerts();
+});

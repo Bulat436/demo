@@ -2,8 +2,8 @@ package com.example.demo.specification;
 
 import org.springframework.data.jpa.domain.Specification;
 
-import com.example.demo.enums.StatusType;
 import com.example.demo.model.Alert;
+import com.example.demo.model.StatusType;
 
 
 

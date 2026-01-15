@@ -75,7 +75,8 @@ public class AuthenticationController {
         if (refreshToken == null) {
             log.warn("Refresh токен отсутствует");
             return ResponseEntity.badRequest().build();
-        }        
+        }
+        
         ResponseEntity<LoginResponse> response = authService.refresh(refreshToken);
         
         if (response.getStatusCode() == HttpStatus.OK) {
@@ -131,7 +132,7 @@ public class AuthenticationController {
             log.warn("Смена пароля не удалась: пароли не совпадают");
             return ResponseEntity.badRequest().body("Пароли не совпадают");
         }
-
+        
         try {
             UserDto user = userService.getUserByUsername(authService.getUserLoggedInfo().username());
             if (user == null) {

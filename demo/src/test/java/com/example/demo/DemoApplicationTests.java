@@ -12,6 +12,7 @@ class DemoApplicationTests {
 
     @Test
     void contextLoads() {
+        // Тест проверяет, что контекст Spring Boot успешно загружается
     }
 
     @Test

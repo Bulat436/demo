@@ -25,7 +25,8 @@ public class DemoApplication {
         SpringApplication.run(DemoApplication.class, args);
         log.info("Приложение DemoApplication успешно запущено");
     }
-     @Bean
+
+    @Bean
     @Profile("!test")
     CommandLineRunner initData(UserRepository userRepository, 
                               RoleRepository roleRepository,
