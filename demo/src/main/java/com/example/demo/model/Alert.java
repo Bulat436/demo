@@ -8,6 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+import com.example.demo.enums.EventType;
+import com.example.demo.enums.StatusType;
+
 @Entity
 @Table(name = "alerts")
 @Data
