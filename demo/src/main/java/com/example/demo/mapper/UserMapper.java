@@ -11,7 +11,7 @@ public class UserMapper {
         return new UserDto(
                 user.getId(),
                 user.getUsername(),
-                user.getPassword(),
+                null,
                 user.getRole().getAuthority(),
                 Collections.emptySet()
         );
@@ -28,7 +28,7 @@ public class UserMapper {
         return new UserLoggedDto(
                 user.getUsername(),
                 user.getRole().getAuthority(),
-                Collections.emptySet()
+                Collections.emptySet() // Временное решение
         );
     }
 }

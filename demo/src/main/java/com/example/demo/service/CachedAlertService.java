@@ -5,11 +5,13 @@ import com.example.demo.exception.AlertNotFoundException;
 import com.example.demo.model.Alert;
 import com.example.demo.repository.AlertRepository;
 import com.example.demo.specification.AlertSpecification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.util.Optional;
 @Primary
 @Transactional
 public class CachedAlertService implements AlertService {
+    private static final Logger log = LoggerFactory.getLogger(CachedAlertService.class);
 
     private final AlertRepository alertRepository;
 
@@ -31,21 +34,39 @@ public class CachedAlertService implements AlertService {
     @Transactional(readOnly = true)
     @Cacheable(value = "alerts", unless = "#result.isEmpty()")
     public List<Alert> findAll() {
-        return alertRepository.findAll();
+        log.debug("Получение всех инцидентов (с кэшированием)");
+        
+        List<Alert> alerts = alertRepository.findAll();
+        log.info("Получено {} инцидентов из базы данных", alerts.size());
+        
+        return alerts;
     }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "alertsByStatus", key = "#status.name()")
     public List<Alert> findByStatus(StatusType status) {
-        return alertRepository.findByStatus(status);
+        log.debug("Получение инцидентов по статусу: {} (с кэшированием)", status);
+        
+        List<Alert> alerts = alertRepository.findByStatus(status);
+        log.info("Получено {} инцидентов со статусом: {}", alerts.size(), status);
+        
+        return alerts;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Alert> findById(Long id) {
-        // Не кешируем отдельные сущности, т.к. они могут часто меняться
-        return alertRepository.findById(id);
+        log.debug("Получение инцидента по ID: {}", id);
+        
+        Optional<Alert> alert = alertRepository.findById(id);
+        if (alert.isPresent()) {
+            log.debug("Инцидент найден: id={}, тип={}", id, alert.get().getType());
+        } else {
+            log.debug("Инцидент не найден: id={}", id);
+        }
+        
+        return alert;
     }
 
     @Override
@@ -56,13 +77,24 @@ public class CachedAlertService implements AlertService {
         @CacheEvict(value = "alertsByUser", allEntries = true)
     })
     public Alert create(Alert alert) {
+        log.info("Создание нового инцидента: busId={}, тип={}, местоположение={}", 
+                alert.getBusId(), alert.getType(), alert.getLocation());
+        
         if (alert.getTimestamp() == null) {
             alert.setTimestamp(java.time.LocalDateTime.now());
+            log.debug("Установлено время по умолчанию для инцидента");
         }
         if (alert.getStatus() == null) {
             alert.setStatus(StatusType.NEW);
-        }
-        return alertRepository.save(alert);
+            log.debug("Установлен статус NEW по умолчанию для инцидента");
+        }        
+        Alert savedAlert = alertRepository.save(alert);
+        log.info("Инцидент успешно создан: id={}, busId={}, тип={}, статус={}", 
+                savedAlert.getId(), savedAlert.getBusId(), savedAlert.getType(), savedAlert.getStatus());
+        
+        log.debug("Все кэши инцидентов инвалидированы после создания");
+        
+        return savedAlert;
     }
 
     @Override
@@ -73,10 +105,23 @@ public class CachedAlertService implements AlertService {
         @CacheEvict(value = "alertsByUser", allEntries = true)
     })
     public Alert updateStatus(Long alertId, StatusType newStatus) {
+        log.info("Обновление статуса инцидента: id={}, новый статус={}", alertId, newStatus);
+        
         Alert alert = alertRepository.findById(alertId)
-                .orElseThrow(() -> new AlertNotFoundException(alertId));
-        alert.setStatus(newStatus);
-        return alertRepository.save(alert);
+                .orElseThrow(() -> {
+                    log.error("Инцидент не найден для обновления статуса: id={}", alertId);
+                    return new AlertNotFoundException(alertId);
+                });
+        
+        StatusType oldStatus = alert.getStatus();
+        alert.setStatus(newStatus);        
+        Alert updatedAlert = alertRepository.save(alert);
+        log.info("Статус инцидента обновлен: id={}, старый статус={}, новый статус={}", 
+                alertId, oldStatus, newStatus);
+        
+        log.debug("Все кэши инцидентов инвалидированы после обновления статуса");
+        
+        return updatedAlert;
     }
 
     @Override
@@ -87,11 +132,24 @@ public class CachedAlertService implements AlertService {
         @CacheEvict(value = "alertsByUser", allEntries = true)
     })
     public Alert assignToUser(Long alertId, Long userId) {
+        log.info("Назначение инцидента пользователю: инцидентId={}, пользовательId={}", alertId, userId);
+        
         Alert alert = alertRepository.findById(alertId)
-                .orElseThrow(() -> new AlertNotFoundException(alertId));
+                .orElseThrow(() -> {
+                    log.error("Инцидент не найден для назначения: id={}", alertId);
+                    return new AlertNotFoundException(alertId);
+                });
+        
         alert.setAssignedToUserId(userId);
         alert.setStatus(StatusType.IN_PROGRESS);
-        return alertRepository.save(alert);
+        
+        Alert updatedAlert = alertRepository.save(alert);
+        log.info("Инцидент назначен: инцидентId={}, пользовательId={}, новый статус={}", 
+                alertId, userId, StatusType.IN_PROGRESS);
+        
+        log.debug("Все кэши инцидентов инвалидированы после назначения");
+        
+        return updatedAlert;
     }
 
     @Override
@@ -102,24 +160,19 @@ public class CachedAlertService implements AlertService {
         @CacheEvict(value = "alertsByUser", allEntries = true)
     })
     public void deleteById(Long id) {
+        log.info("Удаление инцидента: id={}", id);
+        
         if (!alertRepository.existsById(id)) {
+            log.error("Инцидент не найден для удаления: id={}", id);
             throw new AlertNotFoundException(id);
         }
+        
         alertRepository.deleteById(id);
+        log.info("Инцидент успешно удален: id={}", id);
+        
+        log.debug("Все кэши инцидентов инвалидированы после удаления");
     }
 
-    // Дополнительные методы с кешированием
-    @Transactional(readOnly = true)
-    @Cacheable(value = "alertsByBus", key = "#busId")
-    public List<Alert> findByBusId(Long busId) {
-        return alertRepository.findByBusId(busId);
-    }
-    
-    @Transactional(readOnly = true)
-    @Cacheable(value = "alertsByUser", key = "#userId")
-    public List<Alert> findByAssignedToUserId(Long userId) {
-        return alertRepository.findByAssignedToUserId(userId);
-    }
     @Override
     @Caching(evict = {
         @CacheEvict(value = "alerts", allEntries = true),
@@ -128,17 +181,62 @@ public class CachedAlertService implements AlertService {
         @CacheEvict(value = "alertsByUser", allEntries = true)
     })
     public Alert addFileToAlert(Long alertId, String filePath) {
+        log.info("Добавление файла к инциденту: инцидентId={}, путь к файлу={}", alertId, filePath);
+        
         Alert alert = alertRepository.findById(alertId)
-                .orElseThrow(() -> new AlertNotFoundException(alertId));
+                .orElseThrow(() -> {
+                    log.error("Инцидент не найден для прикрепления файла: id={}", alertId);
+                    return new AlertNotFoundException(alertId);
+                });
+        
         alert.setFilePath(filePath);
-        return alertRepository.save(alert);
+        
+        Alert updatedAlert = alertRepository.save(alert);
+        log.info("Файл добавлен к инциденту: инцидентId={}, путь к файлу={}", alertId, filePath);
+        
+        log.debug("Все кэши инцидентов инвалидированы после добавления файла");
+        
+        return updatedAlert;
     }
 
-     @Transactional(readOnly = true)
-    public List<Alert> findByFilters(StatusType status, Long busId, String location) {
-        Specification<Alert> spec = AlertSpecification.filter(status, busId, location);
-        return alertRepository.findAll(spec);
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "alertsByBus", key = "#busId")
+    public List<Alert> findByBusId(Long busId) {
+        log.debug("Получение инцидентов по ID автобуса: {} (с кэшированием)", busId);
+        
+        List<Alert> alerts = alertRepository.findByBusId(busId);
+        log.info("Получено {} инцидентов для автобуса ID: {}", alerts.size(), busId);
+        
+        return alerts;
     }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "alertsByUser", key = "#userId")
+    public List<Alert> findByAssignedToUserId(Long userId) {
+        log.debug("Получение инцидентов по назначенному пользователю ID: {} (с кэшированием)", userId);
+        
+        List<Alert> alerts = alertRepository.findByAssignedToUserId(userId);
+        log.info("Получено {} инцидентов назначенных пользователю ID: {}", alerts.size(), userId);
+        
+        return alerts;
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<Alert> findByFilters(StatusType status, Long busId, String location) {
+        log.debug("Получение инцидентов по фильтрам: статус={}, автобусId={}, местоположение={}", 
+                 status, busId, location);
+        
+        Specification<Alert> spec = AlertSpecification.filter(status, busId, location);
+        List<Alert> alerts = alertRepository.findAll(spec);
+        
+        log.info("Получено {} инцидентов с использованием фильтров", alerts.size());
+        
+        return alerts;
+    }
+
+
     @Caching(evict = {
         @CacheEvict(value = "alerts", allEntries = true),
         @CacheEvict(value = "alertsByStatus", allEntries = true),
@@ -146,6 +244,7 @@ public class CachedAlertService implements AlertService {
         @CacheEvict(value = "alertsByUser", allEntries = true)
     })
     public void clearAllCache() {
-        // Метод только для очистки кеша
+        
+        log.info("Ручная очистка всех кэшей инцидентов");
     }
 }

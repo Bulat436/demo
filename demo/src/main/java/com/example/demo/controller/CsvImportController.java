@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,14 +19,19 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/alerts")
 @RequiredArgsConstructor
 public class CsvImportController {
+    private static final Logger log = LoggerFactory.getLogger(CsvImportController.class);
 
     private final CsvImportService csvImportService;
 
     @PostMapping(value = "/import-csv", consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<CsvImportResult> importCsv(@RequestParam("file") MultipartFile file) {
+        log.info("Запрос импорта CSV - имя файла: {}, размер: {} байт", 
+                file.getOriginalFilename(), file.getSize());
+        
         try {
             if (file.isEmpty()) {
+                log.warn("Импорт CSV не удался: файл пустой");
                 CsvImportResult emptyResult = new CsvImportResult();
                 emptyResult.setSuccessCount(0);
                 emptyResult.setFailedCount(0);
@@ -37,6 +44,7 @@ public class CsvImportController {
                 (!contentType.equals("text/csv") && 
                  !contentType.equals("application/vnd.ms-excel") &&
                  !file.getOriginalFilename().toLowerCase().endsWith(".csv"))) {
+                log.warn("Импорт CSV не удался: неверный тип файла - {}", contentType);
                 CsvImportResult invalidResult = new CsvImportResult();
                 invalidResult.setSuccessCount(0);
                 invalidResult.setFailedCount(0);
@@ -45,9 +53,18 @@ public class CsvImportController {
             }
 
             CsvImportResult result = csvImportService.importAlertsFromCsv(file);
+            
+            log.info("Импорт CSV завершен - успешно: {}, неудачно: {}, ошибок: {}", 
+                    result.getSuccessCount(), result.getFailedCount(), result.getErrors().size());
+            
+            if (result.hasError()) {
+                log.warn("Импорт CSV завершен с ошибками: {}", result.getErrors());
+            }
+            
             return ResponseEntity.ok(result);
             
         } catch (Exception e) {
+            log.error("Ошибка импорта CSV: {}", e.getMessage(), e);
             CsvImportResult errorResult = new CsvImportResult();
             errorResult.setSuccessCount(0);
             errorResult.setFailedCount(0);

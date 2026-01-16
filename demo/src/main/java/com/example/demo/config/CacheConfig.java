@@ -19,8 +19,12 @@ public class CacheConfig {
             "alerts",
             "alertsByStatus",
             "alertsByBus",
-            "alertsByUser"
+            "alertsByUser",
+            "userDetails",
+            "buses",      
+            "bus"
         ));
+        cacheManager.setAllowNullValues(false);
         return cacheManager;
     }
 }

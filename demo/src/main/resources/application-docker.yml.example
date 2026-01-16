@@ -1,0 +1,86 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+  
+  datasource:
+    url: jdbc:postgresql://postgres:5432/${POSTGRES_DB:emergency_db}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:ЗАМЕНИ_НА_СВОЙ_ПАРОЛЬ}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+  
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+  
+  web:
+    resources:
+      static-locations: classpath:/static/,file:/uploads/
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        jdbc:
+          batch_size: 20
+  
+  cache:
+    type: simple
+    cache-names: alerts,alertsByStatus,alertsByBus,alertsByUser,userDetails
+
+jwt:
+  secret: ${JWT_SECRET:сгенерируй_свой_секретный_ключ}
+  access-cookie-name: "access_token"
+  refresh-cookie-name: "refresh_token"
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+    com.example.demo: DEBUG
+    org.springframework.security: INFO
+    org.springframework.cache: TRACE
+    org.hibernate.stat: DEBUG
+    org.springframework.web: DEBUG
+  file:
+    name: /app/logs/application.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+upload:
+  path: /uploads
+
+telegram:
+  bot:
+    enabled: ${TELEGRAM_BOT_ENABLED:false}
+    token: ${TELEGRAM_BOT_TOKEN:}
+    chat-id: ${TELEGRAM_CHAT_ID:}
+    bot-username: ${TELEGRAM_BOT_USERNAME:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
