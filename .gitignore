@@ -1,3 +1,7 @@
+# Ваше добавление
+demo/src/main/resources/application.yml
+
+# Удаленная версия
 # Docker и временные файлы
 *.log
 admin_cookies.txt
@@ -65,9 +69,9 @@ application-*.properties
 !application-*.yml.example
 !application-*.properties.example
 
-# Пример: 
+# Пример:
 # ❌ ЗАПРЕЩЕНО: application.yml (игнорируется)
-# ❌ ЗАПРЕЩЕНО: application-docker.yml (игнорируется)  
+# ❌ ЗАПРЕЩЕНО: application-docker.yml (игнорируется)
 # ✅ РАЗРЕШЕНО: application.yml.example (не игнорируется)
 # ✅ РАЗРЕШЕНО: application-docker.yml.example (не игнорируется)
 
