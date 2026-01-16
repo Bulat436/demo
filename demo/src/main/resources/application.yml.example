@@ -1,17 +1,19 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: tulub2005
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:emergencydb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:your_db_password_here}  # ← ЗАМЕНИТЕ
     driver-class-name: org.postgresql.Driver
+  
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
+  
   web:
     resources:
       static-locations: classpath:/static/,file:./uploads/
-
+  
   jpa:
     hibernate:
       ddl-auto: update
@@ -20,34 +22,33 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        cache:
-          use_second_level_cache: false
-          use_query_cache: false
     
   cache:
     type: simple
-    cache-names: alerts,alertsByStatus,alertsByBus,alertsByUser,userDetails
 
+# JWT настройки
 jwt:
-  secret: "bXlTZWNyZXRLZXkxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTA="
+  secret: ${JWT_SECRET:generate_your_own_jwt_secret}  # ← СГЕНЕРИРУЙТЕ НОВЫЙ
+  expiration: ${JWT_EXPIRATION:900000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
   access-cookie-name: "access_token"
   refresh-cookie-name: "refresh_token"
 
+# Логирование
 logging:
   level:
     org.hibernate.SQL: DEBUG
     com.example.demo: INFO
     org.springframework.security: INFO
-    org.springframework.cache: TRACE
-    org.hibernate.stat: DEBUG
 
+# Загрузка файлов
 upload:
   path: uploads
 
+# Telegram бот (опционально)
 telegram:
   bot:
     enabled: true
-    token: 7814036147:AAHGLNheD8PH1z3E5qHDKeNyiMzT6RuOsAM
-    chat-id: 810471308
-    bot-username: QweBusBot
-
+    token: ${TELEGRAM_BOT_TOKEN:your_telegram_bot_token}  # ← ЗАМЕНИТЕ
+    chat-id: ${TELEGRAM_CHAT_ID:your_chat_id}  # ← ЗАМЕНИТЕ
+    bot-username: bus_alert_system_bot

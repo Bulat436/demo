@@ -20,7 +20,9 @@ public class CacheConfig {
             "alertsByStatus",
             "alertsByBus",
             "alertsByUser",
-            "userDetails"
+            "userDetails",
+            "buses",      
+            "bus"
         ));
         cacheManager.setAllowNullValues(false);
         return cacheManager;
