@@ -90,3 +90,6 @@ application-*.properties
 !LICENSE*.txt
 !CHANGELOG*.txt
 docker-compose.yml
+"docker-compose.yml" 
+"docker-compose.*.yml" 
+"docker-compose.override.yml" 
