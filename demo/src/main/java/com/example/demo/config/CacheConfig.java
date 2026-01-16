@@ -22,7 +22,7 @@ public class CacheConfig {
             "alertsByUser",
             "userDetails",
             "buses",      
-            "bus"
+            "bus"         
         ));
         cacheManager.setAllowNullValues(false);
         return cacheManager;
