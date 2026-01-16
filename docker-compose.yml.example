@@ -1,0 +1,75 @@
+# docker-compose.yml - конфигурация для Emergency Management System
+# Копируйте этот файл в docker-compose.yml и настройте переменные окружения
+
+services:
+  # PostgreSQL база данных
+  postgres:
+    image: postgres:15-alpine
+    container_name: emergency-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    restart: unless-stopped
+
+  # Spring Boot приложение
+  app:
+    build: ./demo
+    container_name: emergency-app
+    ports:
+      - "${SERVER_PORT}:8080"
+    environment:
+      # Spring профиль
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      
+      # База данных
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      
+      # JWT аутентификация
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      
+      # Telegram бот (опционально)
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      
+      # JVM настройки
+      JAVA_OPTS: >
+        -Xmx512m 
+        -Xms256m 
+        -Dspring.profiles.active=docker
+        -Dfile.encoding=UTF-8
+      
+      # Другие настройки
+      FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT}
+      LOGGING_LEVEL_COM_EXAMPLE_DEMO: ${LOGGING_LEVEL_COM_EXAMPLE_DEMO}
+    volumes:
+      - ./uploads:${FILE_UPLOAD_DIR}
+      - ./logs:/app/logs
+      - ./demo/reports:/app/reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+# Docker volumes для сохранения данных
+volumes:
+  postgres_data:
+    driver: local

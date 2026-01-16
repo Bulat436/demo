@@ -33,7 +33,6 @@ build/
 .vscode/
 
 
-
 ### Конфигурационные файлы Spring Boot ###
 application.yml
 application.properties

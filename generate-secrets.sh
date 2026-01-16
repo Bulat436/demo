@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "🔐 Генерация безопасных секретов для проекта"
+echo ""
+echo "1. PostgreSQL пароль:"
+echo "   POSTGRES_PASSWORD=$(openssl rand -base64 16)"
+echo ""
+echo "2. JWT секрет:"
+echo "   JWT_SECRET=$(openssl rand -base64 32)"
+echo ""
+echo "3. Telegram Bot Token (если нужен):"
+echo "   TELEGRAM_BOT_TOKEN=ваш_токен_бота"
+echo ""
+echo "Добавьте эти значения в файл .env"

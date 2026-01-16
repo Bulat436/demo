@@ -1,0 +1,92 @@
+# Docker и временные файлы
+*.log
+admin_cookies.txt
+manager_cookies.txt
+user_cookies.txt
+cookies.txt
+pgadmin-servers.json
+postgres-init/
+.env
+
+# Backup files
+*.backup
+*.backup2
+build.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Build
+target/
+demo/target/
+*.jar
+*.war
+*.ear
+
+# System
+.DS_Store
+Thumbs.db
+
+# Spring Boot (из demo/.gitignore)
+HELP.md
+.mvn/wrapper/maven-wrapper.jar
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+*.iws
+*.ipr
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+.vscode/
+
+# ==================== КОНФИГУРАЦИОННЫЕ ФАЙЛЫ ====================
+
+# ЗАПРЕЩАЕМ реальные конфиги Spring
+application.yml
+application.properties
+
+# ЗАПРЕЩАЕМ профильные конфиги (кроме примеров)
+application-*.yml
+application-*.properties
+
+# НО РАЗРЕШАЕМ ПРИМЕРЫ с .example!
+!application*.example.yml
+!application*.example.properties
+!application-*.yml.example
+!application-*.properties.example
+
+# Пример: 
+# ❌ ЗАПРЕЩЕНО: application.yml (игнорируется)
+# ❌ ЗАПРЕЩЕНО: application-docker.yml (игнорируется)  
+# ✅ РАЗРЕШЕНО: application.yml.example (не игнорируется)
+# ✅ РАЗРЕШЕНО: application-docker.yml.example (не игнорируется)
+
+# Чувствительные данные - ЗАПРЕЩАЕМ
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# НО РАЗРЕШАЕМ пример .env
+!.env.example
+
+# ==================== ТЕКСТОВЫЕ ФАЙЛЫ ====================
+# Игнорируем общие .txt файлы, но не все
+*.txt
+
+# НО РАЗРЕШАЕМ важные .txt файлы
+!README*.txt
+!LICENSE*.txt
+!CHANGELOG*.txt
+docker-compose.yml
